@@ -23,9 +23,22 @@
 
     </header>
     
-    <header class="header2">
-        <h1>Development sprint board</h1>
-        <button class="button-share">share</button>
+    <header>
+        <div class="header2">
+            <h1>Development Sprint Board</h1>
+            <div class="avatar2">
+                <div class="avatar" data-labe="JD">
+                    <p>C</p>
+                </div>
+                <div class="avatar" data-labe="JD">
+                    <p>C</p>
+                </div>
+                <div class="avatar" data-labe="JD">
+                    <p>C</p>
+                </div>
+            </div>
+            <button class="button-share">share</button>
+        </div>
     </header>
 </template>
 
@@ -43,7 +56,8 @@
 }
 
 .logo img {
-    height: 20px; /* Ajuste a altura conforme necessário */
+    height: 35px; /* Ajuste a altura conforme necessário */
+    margin-left: 10px;
 }
 
 .botoes router-link {
@@ -64,8 +78,9 @@
     display: flex;
     background-color: #0C1E3EE5;
     color: white;
-    padding: 10px 20px;
+    padding: 5px 20px;
     font-size: 10px;
+    vertical-align: middle;
 }
 
 .campo-busca {
@@ -86,14 +101,16 @@
 }
 
 .button-share {
-    margin-left: auto; /* Empurra o botão para a extremidade direita */
+    /* margin-left: auto; Empurra o botão para a extremidade direita */
     background-color: #007bff; /* Cor de fundo verde */
     color: white; /* Cor do texto branca */
-    padding: 8px 40px; /* Espaçamento interno */
+    padding: 4px 20px; /* Espaçamento interno */
     border: none; /* Remove a borda padrão */
     border-radius: 4px; /* Cantos arredondados */
     cursor: pointer; /* Muda o cursor para indicar interatividade */
     transition: background-color 0.3s ease; /* Suaviza a transição de cor */
+    height: 40px;
+    margin-top: 5px;
 }
 
 .button-share:hover {
@@ -110,5 +127,23 @@
     width: 30px;
     height: 30px;
     margin-left: 20px;
+}
+.avatar{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background-color: #791daf;
+    color:#fff;
+    font-weight: bold;
+    content: attr(data-label);
+    margin-left: auto;
+    margin-top: 10px;
+    margin-right: 10px;
+}
+.avatar2{
+    margin-left: auto;  
 }
 </style>
