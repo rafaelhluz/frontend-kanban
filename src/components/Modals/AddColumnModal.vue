@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import api from '../../services/api'
 
 const props = defineProps({
   show: Boolean,
@@ -9,11 +10,17 @@ const emit = defineEmits(['close', 'add-column'])
 
 const title = ref('')
 
-function handleAdd() {
+async function handleAdd() {
   if (!title.value.trim()) return
-  emit('add-column', { titleC: title.value, taskC: [] })
-  title.value = ''
-  emit('close')
+
+  try {
+    const response = await api.post('/positions', { titleC: title.value, taskC: [] })
+    emit('add-column', response.data)
+    title.value = ''
+    emit('close')
+  } catch (err) {
+    console.error('Erro ao criar coluna:', err)
+  }
 }
 </script>
 

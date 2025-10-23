@@ -1,5 +1,6 @@
 <script setup>
 import { inject, ref, watch } from 'vue'
+import api from '../../services/api'
 
 const props = defineProps({
   show: Boolean,
@@ -16,9 +17,7 @@ const title = ref('')
 const date = ref('')
 const color = ref('#007bff')
 const steps = ref([])
-const newStep = ref('')
 const comments = ref([])
-const newComment = ref('')
 const attachments = ref([])
 
 watch(() => props.editTask, (task) => {
@@ -42,61 +41,34 @@ function close() {
   attachments.value = []
 }
 
-function addStep() {
-  if (newStep.value.trim()) {
-    steps.value.push({ id: Date.now(), text: newStep.value, done: false })
-    newStep.value = ''
-  }
-}
-
-function removeStep(id) {
-  steps.value = steps.value.filter(s => s.id !== id)
-}
-
-function addComment() {
-  if (newComment.value.trim()) {
-    comments.value.push({ id: Date.now(), text: newComment.value })
-    newComment.value = ''
-  }
-}
-
-function handleFileUpload(event) {
-  const files = Array.from(event.target.files)
-  attachments.value.push(...files.map(f => f.name))
-}
-
-function save() {
+async function save() {
   if (!title.value) return alert('Informe o título da tarefa.')
 
-  if (props.editMode && props.editTask) {
-    Object.assign(props.editTask, {
-      title: title.value,
-      date: date.value,
-      color: color.value,
-      steps: steps.value,
-      comments: comments.value,
-      attachments: attachments.value
-    })
-  } else {
-    const newTask = {
-      id: Date.now(),
-      title: title.value,
-      date: date.value || new Date().toLocaleDateString(),
-      color: color.value,
-      steps: steps.value,
-      comments: comments.value,
-      attachments: attachments.value
-    }
-
-    list_todo.push(newTask)
-
-    const column = list_columns.find(c => c.id === props.columnId)
-    if (column) column.taskC.push(list_todo.length - 1)
+  const taskData = {
+    title,
+    date,
+    color,
+    steps,
+    comments,
+    attachments
   }
 
-  close()
-}
+  try {
+    if (props.editMode && props.editTask) {
+      const response = await api.put(`/tasks/${props.editTask.id}`, taskData)
+      Object.assign(props.editTask, response.data)
+    } else {
+      const response = await api.post('/tasks', { ...taskData, columnId: props.columnId })
+      list_todo.push(response.data)
 
+      const column = list_columns.find(c => c.id === props.columnId)
+      if (column) column.taskC.push(response.data.id)
+    }
+    close()
+  } catch (err) {
+    console.error('Erro ao salvar task:', err)
+  }
+}
 </script>
 
 
