@@ -3,27 +3,60 @@ import Card from "./Card.vue";
 import draggable from 'vuedraggable';
 import { inject, ref } from 'vue';
 import AddCardModal from './Modals/AddCardModal.vue';
+import AddColumnModal from './Modals/AddColumnModal.vue'; // modal de coluna
 
 const list_todo     = inject('list_todo');
 const list_columns  = inject('list_columns');
 
-const showModal     = ref(false)
-const selectedColumn = ref(null)
+// Modal de tarefas
+const showTaskModal     = ref(false)
+const selectedColumn    = ref(null)
+const editTask          = ref(null)
+const editMode          = ref(false)
+
+// Modal de colunas
+const showColumnModal   = ref(false)
 
 function openAdd(columnId){
-  showModal.value = true
+  showTaskModal.value = true
   selectedColumn.value = columnId
+  editTask.value = null
+  editMode.value = false
 }
 
-function closeModal(){
-  showModal.value = false
+function openEditTask(taskIndex){
+  showTaskModal.value = true
+  editTask.value = list_todo[taskIndex]
+  editMode.value = true
+}
+
+function closeTaskModal(){
+  showTaskModal.value = false
   selectedColumn.value = null
+  editTask.value = null
+  editMode.value = false
+}
+
+// Abrir modal de nova coluna
+function openAddColumn(){
+  showColumnModal.value = true
+}
+
+// Fechar modal de nova coluna
+function closeColumnModal(){
+  showColumnModal.value = false
+}
+
+// Recebe a nova coluna emitida do modal e adiciona à lista
+function addColumn(newColumn){
+  const id = Date.now() // gera um ID único simples
+  list_columns.push({ id, ...newColumn })
 }
 </script>
 
 <template>
-    
   <div class="board-container">
+    <!-- Loop das colunas -->
     <div
       v-for="column in list_columns"
       :key="column.id"
@@ -42,23 +75,35 @@ function closeModal(){
         ghost-class="ghost"
       >
         <template #item="{ element: task }">
-          <Card :task="list_todo[task]" />
+          <div @click="openEditTask(task)">
+            <Card :task="list_todo[task]" />
+          </div>
         </template>
       </draggable>
 
       <button class="add-btn" @click="openAdd(column.id)">+ Adicionar tarefa</button>
     </div>
-    
-    <button class="buttonCol">+</button>
-  
+
+    <!-- Botão de adicionar coluna -->
+    <button class="button-coll" @click="openAddColumn()">+ Nova coluna</button>
   </div>
 
-
+  <!-- Modal de adicionar/editar tarefa -->
   <AddCardModal
-    v-if="showModal"
-    :show="showModal"
+    v-if="showTaskModal"
+    :show="showTaskModal"
     :columnId="selectedColumn"
-    @close="closeModal"
+    :editTask="editTask"
+    :editMode="editMode"
+    @close="closeTaskModal"
+  />
+
+  <!-- Modal de adicionar coluna -->
+  <AddColumnModal
+    v-if="showColumnModal"
+    :show="showColumnModal"
+    @close="closeColumnModal"
+    @add-column="addColumn"
   />
 </template>
 
@@ -79,19 +124,34 @@ function closeModal(){
   flex-direction: column;
 }
 
-.buttonCol{
-  /*border-radius: 8px;
+.button-coll{
+  border-radius: 8px;
   padding: 12px;
   width: 300px;
-  display: flex;*/
+  height: 200px;
+  display: flex;
   border: none;
   cursor: pointer;
   justify-content: center;
   align-items: center;
+  background-color: #ebecf0;
+  font-size: large;
 }
 
-.buttonCol button:hover {
-  background-color: gray;
+.button-coll:hover {
+  background-color: #0C1E3EE5;
   transition: 0.5s;
+  color: white;
+}
+
+.add-btn {
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.add-btn:hover {
+  background-color: #0C1E3EE5;
+  transition: 0.3s;
+  color: white;
 }
 </style>

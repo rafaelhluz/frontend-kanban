@@ -1,3 +1,105 @@
+<script setup>
+import { inject, ref, watch } from 'vue'
+
+const props = defineProps({
+  show: Boolean,
+  columnId: Number,
+  editMode: Boolean,
+  editTask: Object
+})
+const emit = defineEmits(['close'])
+
+const list_todo = inject('list_todo')
+const list_columns = inject('list_columns')
+
+const title = ref('')
+const date = ref('')
+const color = ref('#007bff')
+const steps = ref([])
+const newStep = ref('')
+const comments = ref([])
+const newComment = ref('')
+const attachments = ref([])
+
+watch(() => props.editTask, (task) => {
+  if (task) {
+    title.value = task.title
+    date.value = task.date
+    color.value = task.color || '#007bff'
+    steps.value = task.steps || []
+    comments.value = task.comments || []
+    attachments.value = task.attachments || []
+  }
+}, { immediate: true })
+
+function close() {
+  emit('close')
+  title.value = ''
+  date.value = ''
+  color.value = '#007bff'
+  steps.value = []
+  comments.value = []
+  attachments.value = []
+}
+
+function addStep() {
+  if (newStep.value.trim()) {
+    steps.value.push({ id: Date.now(), text: newStep.value, done: false })
+    newStep.value = ''
+  }
+}
+
+function removeStep(id) {
+  steps.value = steps.value.filter(s => s.id !== id)
+}
+
+function addComment() {
+  if (newComment.value.trim()) {
+    comments.value.push({ id: Date.now(), text: newComment.value })
+    newComment.value = ''
+  }
+}
+
+function handleFileUpload(event) {
+  const files = Array.from(event.target.files)
+  attachments.value.push(...files.map(f => f.name))
+}
+
+function save() {
+  if (!title.value) return alert('Informe o título da tarefa.')
+
+  if (props.editMode && props.editTask) {
+    Object.assign(props.editTask, {
+      title: title.value,
+      date: date.value,
+      color: color.value,
+      steps: steps.value,
+      comments: comments.value,
+      attachments: attachments.value
+    })
+  } else {
+    const newTask = {
+      id: Date.now(),
+      title: title.value,
+      date: date.value || new Date().toLocaleDateString(),
+      color: color.value,
+      steps: steps.value,
+      comments: comments.value,
+      attachments: attachments.value
+    }
+
+    list_todo.push(newTask)
+
+    const column = list_columns.find(c => c.id === props.columnId)
+    if (column) column.taskC.push(list_todo.length - 1)
+  }
+
+  close()
+}
+
+</script>
+
+
 <template>
   <div v-if="show" class="modal-overlay" @click.self="close">
     <div class="modal">
@@ -18,6 +120,37 @@
         type="date"
       />
 
+      <label for="color">Cor do card</label>
+      <input id="color" type="color" v-model="color" />
+
+      <label>Steps / Passos</label>
+      <div class="steps">
+          <div v-for="step in steps" :key="step.id" class="step-item">
+            <input type="checkbox" v-model="step.done" />
+              <span :style="{ textDecoration: step.done ? 'line-through' : 'none' }">{{ step.text }}</span>
+              <button @click="removeStep(step.id)">x</button>
+          </div>
+          <div class="step-add">
+            <input v-model="newStep" placeholder="Novo passo..." />
+            <button @click="addStep">+</button>
+          </div>
+      </div>
+
+      <label>Comentários</label>
+      <div class="comments">
+        <div v-for="comment in comments" :key="comment.id" class="comment-item">
+          <span>{{ comment.text }}</span>
+        </div>
+        <input v-model="newComment" placeholder="Novo comentário..." @keyup.enter="addComment" />
+        <button @click="addComment">Adicionar</button>
+      </div>
+
+      <label>Anexos</label>
+      <input type="file" multiple @change="handleFileUpload" />
+        <ul>
+          <li v-for="file in attachments" :key="file">{{ file }}</li>
+        </ul>
+
       <div class="actions">
         <button @click="save">{{ editMode ? 'Salvar' : 'Adicionar' }}</button>
         <button class="cancel" @click="close">Cancelar</button>
@@ -25,59 +158,6 @@
     </div>
   </div>
 </template>
-
-<script setup>
-import { inject, ref, watch } from 'vue'
-
-const props = defineProps({
-  show: Boolean,
-  columnId: Number,
-  editMode: Boolean,
-  editTask: Object
-})
-const emit = defineEmits(['close'])
-
-const list_todo = inject('list_todo')
-const list_columns = inject('list_columns')
-
-const title = ref('')
-const date = ref('')
-
-watch(() => props.editTask, (task) => {
-  if (task) {
-    title.value = task.title
-    date.value = task.date
-  }
-}, { immediate: true })
-
-function close() {
-  emit('close')
-  title.value = ''
-  date.value = ''
-}
-
-function save() {
-  if (!title.value) return alert('Informe o título da tarefa.')
-
-  if (props.editMode && props.editTask) {
-    props.editTask.title = title.value
-    props.editTask.date = date.value
-  } else {
-    const newTask = {
-      id: Date.now(),
-      title: title.value,
-      date: date.value || new Date().toLocaleDateString()
-    }
-
-    list_todo.push(newTask)
-
-    const column = list_columns.find(c => c.id === props.columnId)
-    if (column) column.taskC.push(list_todo.length - 1)
-  }
-
-  close()
-}
-</script>
 
 <style scoped>
 .modal-overlay {
@@ -140,4 +220,41 @@ button:hover {
   background: #007bff;
   color: white;
 }
+
+.steps, .comments {
+  background: #f7f7f7;
+  padding: 8px;
+  border-radius: 6px;
+  margin-top: 6px;
+}
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.step-item button {
+  background: none;
+  border: none;
+  color: red;
+  cursor: pointer;
+}
+.step-add {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+.comments input {
+  width: 100%;
+  margin-top: 5px;
+  padding: 6px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+.comments button {
+  margin-top: 5px;
+  background: #007bff;
+  color: white;
+}
+
 </style>

@@ -3,9 +3,23 @@ defineProps(['task'])
 </script>
 
 <template>
-  <div class="card" @click="$emit('edit-task', task.id)">
+  <div
+    class="card"
+    @click="$emit('edit-task', task.id)"
+    :style="{ borderLeft: `4px solid ${task.color || '#000'}` }"
+  >
     <p class="title">{{ task.title }}</p>
     <small class="date">{{ task.date }}</small>
+
+    <span v-if="task.steps?.length" class="info">
+      ✅ {{ completedSteps }}/{{ task.steps.length }}
+    </span>
+    <span v-if="task.comments?.length" class="info">
+      💬 {{ task.comments.length }}
+    </span>
+    <span v-if="task.attachments?.length" class="info">
+      📎 {{ task.attachments.length }}
+    </span>
   </div>
 </template>
 
@@ -18,6 +32,7 @@ defineProps(['task'])
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   cursor: pointer;
   transition: transform 0.2s;
+  border-left: 4px solid;
 }
 .card:hover {
   transform: scale(1.02);
@@ -30,5 +45,9 @@ defineProps(['task'])
 .date {
   font-size: 12px;
   color: #777;
+}
+.info {
+  font-size: 10px;
+  margin: 5px;
 }
 </style>
